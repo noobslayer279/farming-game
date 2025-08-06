@@ -5,208 +5,209 @@
 
 <body>
   <main>
-      <div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
+     <div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
 
-        <!-- Row of 10 brown tiles near the top -->
-        <div id="tilesRow" style="
-          display: flex;
-          justify-content: center;
-          gap: 4px;
-          position: absolute;
-          top: 15px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 380px;
-          z-index: 10;
-        ">
-          <!-- 10 Brown Tiles -->
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-          <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-        </div>
+  <!-- Row of 10 brown tiles near the top -->
+  <div id="tilesRow" style="
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 380px;
+    z-index: 10;
+  ">
+    <!-- 10 Brown Tiles -->
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+  </div>
 
-        <!-- Fence line (tan) at 400px -->
-        <div style="
-          position: absolute;
-          bottom: 80px;
-          left: 0;
-          width: 100%;
-          height: 10px;
-          background: tan;
-          z-index: 15;
-        "></div>
+  <!-- Fence line (tan) at 400px -->
+  <div style="
+    position: absolute;
+    bottom: 80px;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: tan;
+    z-index: 15;
+  "></div>
 
-        <!-- Tool selection area -->
-        <div style="
-          position: absolute;
-          bottom: 10px;
-          left: 0;
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          gap: 40px;
-          z-index: 30;
-        ">
-          <div onclick="selectTool('hoe')" style="cursor: pointer; font-size: 20px;">🪒</div>
-          <div onclick="selectTool('watering-can')" style="cursor: pointer; font-size: 20px;">💧</div>
-          <div onclick="selectTool('shovel')" style="cursor: pointer; font-size: 20px;">🛠️</div>
-        </div>
+  <!-- Tool selection area (below shop but above grass) -->
+  <div style="
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    z-index: 20;
+  ">
+    <div onclick="selectTool('hoe')" style="cursor: pointer; font-size: 20px;">🪒</div>
+    <div onclick="selectTool('watering-can')" style="cursor: pointer; font-size: 20px;">💧</div>
+    <div onclick="selectTool('shovel')" style="cursor: pointer; font-size: 20px;">🛠️</div>
+  </div>
 
-        <!-- Small building -->
-        <div id="building" style="
-          width: 60px;
-          height: 80px;
-          background: gray;
-          border-radius: 6px;
-          position: absolute;
-          bottom: 100px;
-          right: 20px;
-          z-index: 10;
-          box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
-        ">
-          <div style="width: 20px; height: 20px; background: #444; margin: 10px auto; border-radius: 3px;"></div>
-        </div>
+  <!-- Small building -->
+  <div id="building" style="
+    width: 60px;
+    height: 80px;
+    background: gray;
+    border-radius: 6px;
+    position: absolute;
+    bottom: 100px;
+    right: 20px;
+    z-index: 10;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+  ">
+    <div style="width: 20px; height: 20px; background: #444; margin: 10px auto; border-radius: 3px;"></div>
+  </div>
 
-        <!-- Movable circle -->
-        <div id="player" style="
-          width: 40px;
-          height: 40px;
-          background: #2196f3;
-          border-radius: 50%;
-          position: absolute;
-          top: 180px;
-          left: 180px;
-          z-index: 20;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-        "></div>
+  <!-- Movable circle -->
+  <div id="player" style="
+    width: 40px;
+    height: 40px;
+    background: #2196f3;
+    border-radius: 50%;
+    position: absolute;
+    top: 180px;
+    left: 180px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  "></div>
 
-        <!-- Shop tab (hidden by default) -->
-        <div id="shopTab" style="
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 100px;
-          background: #fff;
-          border-top: 2px solid #333;
-          box-shadow: 0 -5px 10px rgba(0,0,0,0.2);
-          padding: 15px;
-          box-sizing: border-box;
-          font-size: 16px;
-          color: #333;
-          display: none;
-          z-index: 25;
-        ">
-          <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
-        </div>
+  <!-- Shop tab (hidden by default) -->
+  <div id="shopTab" style="
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: #fff;
+    border-top: 2px solid #333;
+    box-shadow: 0 -5px 10px rgba(0,0,0,0.2);
+    padding: 15px;
+    box-sizing: border-box;
+    font-size: 16px;
+    color: #333;
+    display: none;
+    z-index: 25;
+  ">
+    <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
+  </div>
 
-        <script>
-          const player = document.getElementById('player');
-          const building = document.getElementById('building');
-          const shopTab = document.getElementById('shopTab');
+  <script>
+    const player = document.getElementById('player');
+    const building = document.getElementById('building');
+    const shopTab = document.getElementById('shopTab');
 
-          const containerSize = 400;
-          const playerSize = 40;
+    const containerSize = 400;
+    const playerSize = 40;
 
-          let posX = 180;
-          let posY = 180;
-          const speed = 3;
-          let selectedTool = '';
+    let posX = 180;
+    let posY = 180;
+    const speed = 3;
+    let selectedTool = '';
 
-          const keys = { w: false, a: false, s: false, d: false };
+    const keys = { w: false, a: false, s: false, d: false };
 
-          window.addEventListener('keydown', (e) => {
-            const key = e.key.toLowerCase();
-            if (key in keys) {
-              keys[key] = true;
-              e.preventDefault();
-            }
-          });
+    window.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (key in keys) {
+        keys[key] = true;
+        e.preventDefault();
+      }
+    });
 
-          window.addEventListener('keyup', (e) => {
-            const key = e.key.toLowerCase();
-            if (key in keys) {
-              keys[key] = false;
-              e.preventDefault();
-            }
-          });
+    window.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+      if (key in keys) {
+        keys[key] = false;
+        e.preventDefault();
+      }
+    });
 
-          function isColliding(rect1, rect2) {
-            return !(
-              rect1.right <= rect2.left ||
-              rect1.left >= rect2.right ||
-              rect1.bottom <= rect2.top ||
-              rect1.top >= rect2.bottom
-            );
-          }
+    function isColliding(rect1, rect2) {
+      return !(
+        rect1.right <= rect2.left ||
+        rect1.left >= rect2.right ||
+        rect1.bottom <= rect2.top ||
+        rect1.top >= rect2.bottom
+      );
+    }
 
-          function canMove(newX, newY) {
-            const newRect = {
-              left: newX,
-              right: newX + playerSize,
-              top: newY,
-              bottom: newY + playerSize
-            };
+    function canMove(newX, newY) {
+      const newRect = {
+        left: newX,
+        right: newX + playerSize,
+        top: newY,
+        bottom: newY + playerSize
+      };
 
-            const buildingRect = building.getBoundingClientRect();
-            if (isColliding(newRect, buildingRect)) return false;
-            if (newX < 0 || newY < 0 || newX > containerSize - playerSize || newY > containerSize - playerSize) return false;
+      const buildingRect = building.getBoundingClientRect();
+      if (isColliding(newRect, buildingRect)) return false;
+      if (newX < 0 || newY < 0 || newX > containerSize - playerSize || newY > containerSize - playerSize) return false;
 
-            return true;
-          }
+      return true;
+    }
 
-          function movePlayer() {
-            let newX = posX;
-            let newY = posY;
+    function movePlayer() {
+      let newX = posX;
+      let newY = posY;
 
-            if (keys.w) newY = Math.max(0, posY - speed);
-            if (keys.a) newX = Math.max(0, posX - speed);
-            if (keys.s) newY = Math.min(containerSize - playerSize, posY + speed);
-            if (keys.d) newX = Math.min(containerSize - playerSize, posX + speed);
+      if (keys.w) newY = Math.max(0, posY - speed);
+      if (keys.a) newX = Math.max(0, posX - speed);
+      if (keys.s) newY = Math.min(containerSize - playerSize, posY + speed);
+      if (keys.d) newX = Math.min(containerSize - playerSize, posX + speed);
 
-            if (canMove(newX, newY)) {
-              posX = newX;
-              posY = newY;
-            }
+      if (canMove(newX, newY)) {
+        posX = newX;
+        posY = newY;
+      }
 
-            player.style.top = posY + 'px';
-            player.style.left = posX + 'px';
+      player.style.top = posY + 'px';
+      player.style.left = posX + 'px';
 
-            const playerRect = player.getBoundingClientRect();
-            const buildingRect = building.getBoundingClientRect();
+      const playerRect = player.getBoundingClientRect();
+      const buildingRect = building.getBoundingClientRect();
 
-            if (isColliding(playerRect, buildingRect)) {
-              shopTab.style.display = 'block';
-            } else {
-              shopTab.style.display = 'none';
-            }
+      if (isColliding(playerRect, buildingRect)) {
+        shopTab.style.display = 'block';
+      } else {
+        shopTab.style.display = 'none';
+      }
 
-            requestAnimationFrame(movePlayer);
-          }
+      requestAnimationFrame(movePlayer);
+    }
 
-          function selectTool(tool) {
-            const toolIcons = {
-              'hoe': '🪒',
-              'watering-can': '💧',
-              'shovel': '🛠️'
-            };
-            selectedTool = tool;
-            player.innerText = toolIcons[tool] || '';
-          }
+    function selectTool(tool) {
+      const toolIcons = {
+        'hoe': '🪒',
+        'watering-can': '💧',
+        'shovel': '🛠️'
+      };
+      selectedTool = tool;
+      player.innerText = toolIcons[tool] || '';
+    }
 
-          movePlayer();
-        </script>
-      </div>
+    movePlayer();
+  </script>
+</div>
+
 </body>
 
 </html>
