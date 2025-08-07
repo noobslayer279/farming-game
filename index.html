@@ -21,7 +21,7 @@
   </div>
   <!-- Fence line (tan) at 400px -->
   <div style="position: absolute; bottom: 80px; left: 0; width: 100%; height: 10px; background: tan; z-index: 15;"></div>
-  <!-- Tool selection area (below shop but above grass) -->
+  <!-- Tool selection area -->
   <div style="position: absolute; bottom: 10px; left: 0; width: 100%; display: flex; justify-content: center; gap: 40px; z-index: 20;">
     <div onclick="selectTool('hoe')" id="hoeTool" style="cursor: pointer; font-size: 20px;">🪒</div>
     <div onclick="selectTool('watering-can')" style="cursor: pointer; font-size: 20px;">💧</div>
@@ -37,40 +37,44 @@
   <div id="shopTab" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 25;">
     <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
   </div>
-  <!-- Wheat window -->
-  <div id="wheatWindow" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 170px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 20px 20px 10px 20px; box-sizing: border-box; font-size: 17px; color: #333; display: none; z-index: 26;">
+  <!-- Wheat menu window (press C to open) -->
+  <div id="wheatMenuWindow" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 340px; height: 210px; background: #fff; border: 2px solid #c2a300; border-radius: 18px; box-shadow: 0 0 30px #0002; padding: 28px 34px 15px 34px; box-sizing: border-box; font-size: 17px; color: #333; display: none; z-index: 40;">
     <div style="display: flex; align-items: center; justify-content: space-between;">
-      <span style="font-size: 22px; font-weight: 600;">Wheat Inventory</span>
-      <button id="closeWheatWindow" style="font-size:17px; background: #eee; border-radius: 6px; padding: 2px 12px; border: 1px solid #aaa; cursor: pointer;">Close</button>
+      <span style="font-size: 24px; font-weight: 700;">Inventory & Info</span>
+      <button id="closeWheatMenuWindow" style="font-size:17px; background: #eee; border-radius: 6px; padding: 2px 12px; border: 1px solid #aaa; cursor: pointer;">Close</button>
     </div>
-    <div style="margin-top:18px; font-size:16px;">
-      <div><span style="font-size:21px;">🌾</span> Wheat: <span id="wheatCountDisplay">0</span></div>
-      <div><span style="font-size:16px;">🌰</span> Seeds: <span id="wheatSeedCountMenu">0</span></div>
-      <div style="margin-top:12px;">Total wheat harvested: <span id="totalWheatHarvested">0</span></div>
+    <div style="margin-top:14px;">
+      <button id="wheatBtn" style="padding: 10px 38px; border-radius: 8px; font-size: 18px; background: gold; color: #222; border: 2px solid #aaa; cursor: pointer; box-shadow: 0 2px 6px #0002; margin-bottom: 10px;">Wheat</button>
+      <div id="wheatWindow" style="display:none; margin-top:8px; width: 100%; background: #fffbe5; border: 2px solid #c2a300; border-radius: 12px; box-shadow: 0 0 12px #0001; padding: 18px 18px 14px 18px;">
+        <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px;">Wheat Inventory</div>
+        <div style="margin-top:8px; font-size:17px;">
+          <div><span style="font-size:22px;">🌾</span> Wheat: <span id="wheatCountDisplay">0</span></div>
+          <div><span style="font-size:17px;">🌰</span> Seeds: <span id="wheatSeedCountMenu">0</span></div>
+          <div style="margin-top:13px;">Total wheat harvested: <span id="totalWheatHarvested">0</span></div>
+        </div>
+      </div>
     </div>
-    <div style="position: absolute; right: 16px; bottom: 8px; font-size: 13px;">(press C or Close to exit)</div>
+    <div style="position: absolute; right: 18px; bottom: 10px; font-size: 13px;">(press Close or C to exit)</div>
   </div>
-  <!-- Grass container -->
   <div id="grassContainer"></div>
-  <div id="grassToggleInfo" style="position: absolute; left: 12px; bottom: 110px; font-size: 12px; z-index: 30; background: #fff8; border-radius: 8px; padding: 4px 10px; color: #333;">
-    Press <b>G</b> to toggle grass spawning<br>
-    <span id="grassStatusText" style="color: green;">Grass: ON</span>
-  </div>
   <script>
     // Game state variables
     const player = document.getElementById('player');
     const building = document.getElementById('building');
     const shopTab = document.getElementById('shopTab');
+    const wheatMenuWindow = document.getElementById('wheatMenuWindow');
     const wheatWindow = document.getElementById('wheatWindow');
     const wheatCountDisplay = document.getElementById('wheatCountDisplay');
     const wheatSeedCountMenu = document.getElementById('wheatSeedCountMenu');
     const totalWheatHarvestedEl = document.getElementById('totalWheatHarvested');
-    const closeWheatWindowBtn = document.getElementById('closeWheatWindow');
+    const closeWheatMenuWindowBtn = document.getElementById('closeWheatMenuWindow');
+    const wheatBtn = document.getElementById('wheatBtn');
     const tiles = Array.from(document.querySelectorAll('.tile'));
-    const tilesRow = document.getElementById('tilesRow');
     const grassContainer = document.getElementById('grassContainer');
     const wheatSeedCountEl = document.getElementById('wheatSeedCount');
-    const grassStatusText = document.getElementById('grassStatusText');
+
+    // Remove seed display next to hoe if present
+    wheatSeedCountEl && (wheatSeedCountEl.style.display = "none");
 
     const containerSize = 400;
     const playerSize = 40;
@@ -79,6 +83,7 @@
     let posY = 180;
     const speed = 3;
     let selectedTool = '';
+    let wheatMenuWindowVisible = false;
     let wheatWindowVisible = false;
     let grassEnabled = true;
 
@@ -94,41 +99,45 @@
 
     let tileCrops = Array(tiles.length).fill(null);
 
-    // Remove seed display next to hoe
-    wheatSeedCountEl.style.display = "none";
-
-    // Keyboard controls (keydown)
+    // Keyboard controls
     window.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
-      if (['w','a','s','d'].includes(key)) {
-        keys[key] = true;
-        e.preventDefault();
+      if (!wheatMenuWindowVisible) {
+        if (['w','a','s','d'].includes(key)) {
+          keys[key] = true;
+          e.preventDefault();
+        }
       }
       if (key === "c") {
-        wheatWindowVisible = !wheatWindowVisible;
-        wheatWindow.style.display = wheatWindowVisible ? "block" : "none";
+        wheatMenuWindowVisible = !wheatMenuWindowVisible;
+        wheatMenuWindow.style.display = wheatMenuWindowVisible ? "block" : "none";
+        wheatWindow.style.display = "none";
+        wheatWindowVisible = false;
         updateWheatMenu();
       }
-      if (key === "g") {
-        grassEnabled = !grassEnabled;
-        grassStatusText.textContent = grassEnabled ? "Grass: ON" : "Grass: OFF";
-        grassStatusText.style.color = grassEnabled ? "green" : "red";
-      }
     });
 
-    // Keyboard controls (keyup)
     window.addEventListener('keyup', (e) => {
       const key = e.key.toLowerCase();
-      if (['w','a','s','d'].includes(key)) {
-        keys[key] = false;
-        e.preventDefault();
+      if (!wheatMenuWindowVisible) {
+        if (['w','a','s','d'].includes(key)) {
+          keys[key] = false;
+          e.preventDefault();
+        }
       }
     });
 
-    // Wheat menu close button
-    closeWheatWindowBtn.addEventListener("click", () => {
-      wheatWindowVisible = false;
+    closeWheatMenuWindowBtn.addEventListener("click", () => {
+      wheatMenuWindowVisible = false;
+      wheatMenuWindow.style.display = "none";
       wheatWindow.style.display = "none";
+      wheatWindowVisible = false;
+    });
+
+    wheatBtn.addEventListener("click", () => {
+      wheatWindowVisible = !wheatWindowVisible;
+      wheatWindow.style.display = wheatWindowVisible ? "block" : "none";
+      updateWheatMenu();
     });
 
     function updateWheatMenu() {
@@ -402,49 +411,45 @@
     setInterval(spawnGrass, 10000);
 
     function movePlayer() {
-      let newX = posX;
-      let newY = posY;
-      if (keys.w) newY = Math.max(0, posY - speed);
-      if (keys.a) newX = Math.max(0, posX - speed);
-      if (keys.s) newY = Math.min(containerSize - playerSize, posY + speed);
-      if (keys.d) newX = Math.min(containerSize - playerSize, posX + speed);
+      if (!wheatMenuWindowVisible) {
+        let newX = posX;
+        let newY = posY;
+        if (keys.w) newY = Math.max(0, posY - speed);
+        if (keys.a) newX = Math.max(0, posX - speed);
+        if (keys.s) newY = Math.min(containerSize - playerSize, posY + speed);
+        if (keys.d) newX = Math.min(containerSize - playerSize, posX + speed);
 
-      if (canMove(newX, newY)) {
-        posX = newX;
-        posY = newY;
+        if (canMove(newX, newY)) {
+          posX = newX;
+          posY = newY;
+        }
+        player.style.top = posY + 'px';
+        player.style.left = posX + 'px';
+
+        const containerRect = player.parentElement.getBoundingClientRect();
+        const playerRectAbs = player.getBoundingClientRect();
+        const playerRect = {
+          left: playerRectAbs.left - containerRect.left,
+          right: playerRectAbs.right - containerRect.left,
+          top: playerRectAbs.top - containerRect.top,
+          bottom: playerRectAbs.bottom - containerRect.top
+        };
+        const buildingRectAbs = building.getBoundingClientRect();
+        const buildingRect = {
+          left: buildingRectAbs.left - containerRect.left,
+          right: buildingRectAbs.right - containerRect.left,
+          top: buildingRectAbs.top - containerRect.top,
+          bottom: buildingRectAbs.bottom - containerRect.top
+        };
+
+        shopTab.style.display = isColliding(playerRect, buildingRect) ? 'block' : 'none';
+
+        wetNearbyTiles();
+        renderTiles();
+        checkGrassPickup();
+        plantSeedOnTile();
+        harvestWheat();
       }
-      player.style.top = posY + 'px';
-      player.style.left = newX + 'px';
-
-      // Shop tab: open when touching the shop
-      const containerRect = player.parentElement.getBoundingClientRect();
-      const playerRectAbs = player.getBoundingClientRect();
-      const playerRect = {
-        left: playerRectAbs.left - containerRect.left,
-        right: playerRectAbs.right - containerRect.left,
-        top: playerRectAbs.top - containerRect.top,
-        bottom: playerRectAbs.bottom - containerRect.top
-      };
-      const buildingRectAbs = building.getBoundingClientRect();
-      const buildingRect = {
-        left: buildingRectAbs.left - containerRect.left,
-        right: buildingRectAbs.right - containerRect.left,
-        top: buildingRectAbs.top - containerRect.top,
-        bottom: buildingRectAbs.bottom - containerRect.top
-      };
-
-      if (isColliding(playerRect, buildingRect)) {
-        shopTab.style.display = 'block';
-      } else {
-        shopTab.style.display = 'none';
-      }
-
-      wetNearbyTiles();
-      renderTiles();
-      checkGrassPickup();
-      plantSeedOnTile();
-      harvestWheat();
-
       requestAnimationFrame(movePlayer);
     }
 
