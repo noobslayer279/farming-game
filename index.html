@@ -158,16 +158,32 @@
       });
     }
 
+    // Helper: get all tile rects (relative to container)
+    function getAllTileRects() {
+      return tiles.map(getTileRect);
+    }
+
+    // Helper: check if a rect collides with any tile
+    function collidesWithAnyTile(grassRect, tileRects) {
+      return tileRects.some(tileRect => isColliding(grassRect, tileRect));
+    }
+
     // GRASS LOGIC
     function spawnGrass() {
-      // Spawn at random position not overlapping building or outside bounds
+      // Limit: only spawn if < 5 grass
+      if (grassList.length >= 5) return;
+
+      // Get all tile rects
+      const tileRects = getAllTileRects();
+
+      // Try to spawn at valid position
       let tries = 0;
       let grassX, grassY;
       let ok = false;
-      while (!ok && tries < 20) {
+      while (!ok && tries < 40) {
         grassX = Math.floor(Math.random() * (containerSize - 24));
         grassY = Math.floor(Math.random() * (containerSize - 24));
-        // Don't spawn on shop/building
+        // Don't spawn on shop/building or tiles
         const grassRect = {
           left: grassX,
           right: grassX + 24,
@@ -182,9 +198,11 @@
           top: buildingRectAbs.top - containerRect.top,
           bottom: buildingRectAbs.bottom - containerRect.top
         };
-        ok = !isColliding(grassRect, buildingRel);
+        ok = !isColliding(grassRect, buildingRel) && !collidesWithAnyTile(grassRect, tileRects);
         tries++;
       }
+      if (!ok) return; // Give up if can't find
+
       // Create grass element
       const grass = document.createElement('div');
       grass.className = 'grass-item';
@@ -234,7 +252,6 @@
           // 1/2 chance to get wheat seed
           if (Math.random() < 0.5) {
             wheatSeedCount++;
-            // Make the wheat seed count a very small number UI
             wheatSeedCountEl.textContent = wheatSeedCount;
           }
           removeGrass(grassObj);
