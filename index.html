@@ -8,16 +8,16 @@
 <div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
   <!-- Row of 10 brown tiles near the top -->
   <div id="tilesRow" style="display: flex; justify-content: center; gap: 4px; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 380px; z-index: 10;">
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" data-tile="0" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="1" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="2" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="3" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="4" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="5" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="6" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="7" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="8" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
+    <div class="tile" data-tile="9" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
   </div>
   <!-- Fence line (tan) at 400px -->
   <div style="position: absolute; bottom: 80px; left: 0; width: 100%; height: 10px; background: tan; z-index: 15;"></div>
@@ -40,12 +40,20 @@
   <div id="shopTab" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 25;">
     <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
   </div>
+  <!-- Wheat window (hidden by default) -->
+  <div id="wheatWindow" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 26;">
+    <strong>Your Wheat:</strong>
+    <span id="wheatCountDisplay" style="font-size: 22px; margin-left: 10px;">0 🌾</span>
+    <span style="float:right;font-size:13px;">(press C to close)</span>
+  </div>
   <!-- Grass container -->
   <div id="grassContainer"></div>
   <script>
     const player = document.getElementById('player');
     const building = document.getElementById('building');
     const shopTab = document.getElementById('shopTab');
+    const wheatWindow = document.getElementById('wheatWindow');
+    const wheatCountDisplay = document.getElementById('wheatCountDisplay');
     const tiles = Array.from(document.querySelectorAll('.tile'));
     const tilesRow = document.getElementById('tilesRow');
     const grassContainer = document.getElementById('grassContainer');
@@ -59,6 +67,7 @@
     const speed = 3;
     let selectedTool = '';
     const keys = { w: false, a: false, s: false, d: false };
+    let wheatWindowVisible = false;
 
     let wetTiles = Array(tiles.length).fill(false);
     let dryTileTimeouts = Array(tiles.length).fill(null);
@@ -66,12 +75,22 @@
     // Grass and wheat seed variables
     let grassList = [];
     let wheatSeedCount = 0;
+    let wheatCount = 0; // This variable tracks harvested wheat
+
+    // Wheat/crop state for each tile
+    let tileCrops = Array(tiles.length).fill(null);
+    // Each tileCrop holds: {stage: 0-3, planted: true/false, watered: true/false, growTimeout: timeoutId}
 
     window.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
       if (key in keys) {
         keys[key] = true;
         e.preventDefault();
+      }
+      // Toggle wheat window with "c"
+      if (key === "c") {
+        wheatWindowVisible = !wheatWindowVisible;
+        wheatWindow.style.display = wheatWindowVisible ? "block" : "none";
       }
     });
 
@@ -81,6 +100,11 @@
         keys[key] = false;
         e.preventDefault();
       }
+      // Also allow closing wheat window with "c" on keyup (optional)
+      // if (key === "c") {
+      //   wheatWindowVisible = false;
+      //   wheatWindow.style.display = "none";
+      // }
     });
 
     function isColliding(rect1, rect2) {
@@ -142,6 +166,11 @@
         if (isColliding(playerRect, tileRect)) {
           if (!wetTiles[i]) {
             wetTiles[i] = true;
+            // Mark crop as watered if planted
+            if (tileCrops[i] && tileCrops[i].planted) {
+              tileCrops[i].watered = true;
+              tryStartCropGrowth(i);
+            }
             if (dryTileTimeouts[i]) clearTimeout(dryTileTimeouts[i]);
             dryTileTimeouts[i] = setTimeout(() => {
               wetTiles[i] = false;
@@ -154,9 +183,50 @@
 
     function renderTiles() {
       tiles.forEach((tile, i) => {
+        // Tile background
         tile.style.background = wetTiles[i] ? 'rgb(120,65,30)' : 'sienna';
+        // Crop rendering
+        let crop = tileCrops[i];
+        // Remove previous crop visuals
+        let cropEl = tile.querySelector('.crop');
+        if (cropEl) tile.removeChild(cropEl);
+
+        if (crop && crop.planted) {
+          cropEl = document.createElement('div');
+          cropEl.className = 'crop';
+          cropEl.style.position = 'absolute';
+          cropEl.style.left = '50%';
+          cropEl.style.top = '50%';
+          cropEl.style.transform = 'translate(-50%, -50%)';
+          cropEl.style.pointerEvents = 'none';
+
+          if (crop.stage === 0) {
+            cropEl.innerHTML = '<span style="font-size:16px; transition:all 0.5s;">🌰</span>'; // seed
+          } else if (crop.stage === 1) {
+            cropEl.innerHTML = '<span style="font-size:17px; transition:all 0.5s;">🌱</span>'; // sprout
+          } else if (crop.stage === 2) {
+            cropEl.innerHTML = '<span style="font-size:18px; transition:all 0.5s;">🌾</span>'; // growing wheat
+          } else if (crop.stage === 3) {
+            cropEl.innerHTML = '<span style="font-size:20px; transition:all 0.5s;">🌾</span>'; // fully grown wheat
+            cropEl.style.filter = 'drop-shadow(0 0 3px gold)';
+            cropEl.style.animation = 'wheat-sway 1s infinite alternate';
+          }
+          tile.appendChild(cropEl);
+        }
       });
+      // Update wheat display if window open
+      wheatCountDisplay.textContent = wheatCount + ' 🌾';
     }
+
+    // Animation for wheat
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes wheat-sway {
+        0% { transform: translate(-50%, -50%) rotate(-2deg);}
+        100% { transform: translate(-50%, -50%) rotate(2deg);}
+      }
+    `;
+    document.head.appendChild(style);
 
     // Helper: get all tile rects (relative to container)
     function getAllTileRects() {
@@ -259,6 +329,90 @@
       });
     }
 
+    // Planting logic: plant seed in brown tile if hoe equipped & seed available & player touches tile
+    function plantSeedOnTile() {
+      if (selectedTool !== 'hoe') return;
+      if (wheatSeedCount <= 0) return;
+
+      const containerRect = player.parentElement.getBoundingClientRect();
+      const playerRectAbs = player.getBoundingClientRect();
+      const playerRect = {
+        left: playerRectAbs.left - containerRect.left,
+        right: playerRectAbs.right - containerRect.left,
+        top: playerRectAbs.top - containerRect.top,
+        bottom: playerRectAbs.bottom - containerRect.top
+      };
+
+      tiles.forEach((tile, i) => {
+        const tileRect = getTileRect(tile);
+        if (
+          isColliding(playerRect, tileRect) &&
+          (!tileCrops[i] || !tileCrops[i].planted)
+        ) {
+          // Plant seed
+          tileCrops[i] = {
+            stage: 0,
+            planted: true,
+            watered: wetTiles[i],
+            growTimeout: null
+          };
+          wheatSeedCount--;
+          wheatSeedCountEl.textContent = wheatSeedCount;
+          renderTiles();
+          tryStartCropGrowth(i);
+        }
+      });
+    }
+
+    // Try to start crop growth for a tile if possible
+    function tryStartCropGrowth(i) {
+      const crop = tileCrops[i];
+      if (!crop || !crop.planted) return;
+      // Must be watered and not already fully grown
+      if (!crop.watered || crop.stage >= 3) return;
+      if (crop.growTimeout) return; // already growing
+
+      // Growth animation: every 10s advance stage. At stage 3, full grown.
+      crop.growTimeout = setTimeout(() => {
+        crop.stage++;
+        crop.growTimeout = null;
+        renderTiles();
+        if (crop.stage < 3 && crop.watered) {
+          tryStartCropGrowth(i); // grow next stage
+        }
+      }, 10000); // 10s per stage, total 30s
+    }
+
+    // Harvest logic: harvest grown wheat with shovel
+    function harvestWheat() {
+      if (selectedTool !== 'shovel') return;
+
+      const containerRect = player.parentElement.getBoundingClientRect();
+      const playerRectAbs = player.getBoundingClientRect();
+      const playerRect = {
+        left: playerRectAbs.left - containerRect.left,
+        right: playerRectAbs.right - containerRect.left,
+        top: playerRectAbs.top - containerRect.top,
+        bottom: playerRectAbs.bottom - containerRect.top
+      };
+
+      tiles.forEach((tile, i) => {
+        const tileRect = getTileRect(tile);
+        const crop = tileCrops[i];
+        if (
+          isColliding(playerRect, tileRect) &&
+          crop &&
+          crop.planted &&
+          crop.stage === 3
+        ) {
+          // Harvest wheat
+          tileCrops[i] = null;
+          wheatCount++;
+          renderTiles();
+        }
+      });
+    }
+
     // Spawn grass every 10 seconds
     setInterval(spawnGrass, 10000);
 
@@ -306,6 +460,8 @@
       wetNearbyTiles();
       renderTiles();
       checkGrassPickup();
+      plantSeedOnTile();
+      harvestWheat();
 
       requestAnimationFrame(movePlayer);
     }
