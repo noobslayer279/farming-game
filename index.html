@@ -37,12 +37,20 @@
   <div id="shopTab" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 25;">
     <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
   </div>
+  <!-- Wheat seeds counter -->
+  <div id="seedCounter" style="position: absolute; right: 15px; bottom: 15px; z-index: 30; background: #fff8; padding: 6px 12px; border-radius: 8px; font-size: 18px; color: #333;">
+    Wheat Seeds: <span id="wheatSeedCount">0</span>
+  </div>
+  <!-- Grass container -->
+  <div id="grassContainer"></div>
   <script>
     const player = document.getElementById('player');
     const building = document.getElementById('building');
     const shopTab = document.getElementById('shopTab');
     const tiles = Array.from(document.querySelectorAll('.tile'));
     const tilesRow = document.getElementById('tilesRow');
+    const grassContainer = document.getElementById('grassContainer');
+    const wheatSeedCountEl = document.getElementById('wheatSeedCount');
 
     const containerSize = 400;
     const playerSize = 40;
@@ -55,6 +63,10 @@
 
     let wetTiles = Array(tiles.length).fill(false);
     let dryTileTimeouts = Array(tiles.length).fill(null);
+
+    // Grass and wheat seed variables
+    let grassList = [];
+    let wheatSeedCount = 0;
 
     window.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
@@ -147,6 +159,93 @@
       });
     }
 
+    // GRASS LOGIC
+    function spawnGrass() {
+      // Spawn at random position not overlapping building or outside bounds
+      let tries = 0;
+      let grassX, grassY;
+      let ok = false;
+      while (!ok && tries < 20) {
+        grassX = Math.floor(Math.random() * (containerSize - 24));
+        grassY = Math.floor(Math.random() * (containerSize - 24));
+        // Don't spawn on shop/building
+        const grassRect = {
+          left: grassX,
+          right: grassX + 24,
+          top: grassY,
+          bottom: grassY + 24
+        };
+        const buildingRectAbs = building.getBoundingClientRect();
+        const containerRect = player.parentElement.getBoundingClientRect();
+        const buildingRel = {
+          left: buildingRectAbs.left - containerRect.left,
+          right: buildingRectAbs.right - containerRect.left,
+          top: buildingRectAbs.top - containerRect.top,
+          bottom: buildingRectAbs.bottom - containerRect.top
+        };
+        ok = !isColliding(grassRect, buildingRel);
+        tries++;
+      }
+      // Create grass element
+      const grass = document.createElement('div');
+      grass.className = 'grass-item';
+      grass.style.position = 'absolute';
+      grass.style.left = grassX + 'px';
+      grass.style.top = grassY + 'px';
+      grass.style.width = '24px';
+      grass.style.height = '24px';
+      grass.style.background = 'linear-gradient(135deg,#6b8e23 70%,#9acd32 100%)';
+      grass.style.borderRadius = '50%';
+      grass.style.boxShadow = '0 2px 8px #0002';
+      grass.style.zIndex = 18;
+      grass.style.display = 'flex';
+      grass.style.alignItems = 'center';
+      grass.style.justifyContent = 'center';
+      grass.innerHTML = '🌱';
+      grassContainer.appendChild(grass);
+      grassList.push({ el: grass, x: grassX, y: grassY });
+    }
+
+    function removeGrass(grassObj) {
+      grassContainer.removeChild(grassObj.el);
+      grassList = grassList.filter(g => g !== grassObj);
+    }
+
+    function checkGrassPickup() {
+      // Only harvest grass if shovel is equipped
+      if (selectedTool !== 'shovel') return;
+
+      // Player rect
+      const containerRect = player.parentElement.getBoundingClientRect();
+      const playerRectAbs = player.getBoundingClientRect();
+      const playerRect = {
+        left: playerRectAbs.left - containerRect.left,
+        right: playerRectAbs.right - containerRect.left,
+        top: playerRectAbs.top - containerRect.top,
+        bottom: playerRectAbs.bottom - containerRect.top
+      };
+      grassList.forEach(grassObj => {
+        const grassRect = {
+          left: grassObj.x,
+          right: grassObj.x + 24,
+          top: grassObj.y,
+          bottom: grassObj.y + 24
+        };
+        if (isColliding(playerRect, grassRect)) {
+          // 1/2 chance to get wheat seed
+          if (Math.random() < 0.5) {
+            wheatSeedCount++;
+            wheatSeedCountEl.textContent = wheatSeedCount;
+            // Optional: show feedback, e.g. flash, animation
+          }
+          removeGrass(grassObj);
+        }
+      });
+    }
+
+    // Spawn grass every 10 seconds
+    setInterval(spawnGrass, 10000);
+
     function movePlayer() {
       let newX = posX;
       let newY = posY;
@@ -190,6 +289,7 @@
 
       wetNearbyTiles();
       renderTiles();
+      checkGrassPickup();
 
       requestAnimationFrame(movePlayer);
     }
