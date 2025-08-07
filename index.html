@@ -5,7 +5,7 @@
 
 <body>
   <main>
-<div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
+<div style="width: 400px; height: 220px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
   <!-- Row of 10 brown tiles near the top -->
   <div id="tilesRow" style="display: flex; justify-content: center; gap: 4px; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 380px; z-index: 10;">
     <div class="tile" data-tile="0" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
@@ -23,10 +23,7 @@
   <div style="position: absolute; bottom: 80px; left: 0; width: 100%; height: 10px; background: tan; z-index: 15;"></div>
   <!-- Tool selection area (below shop but above grass) -->
   <div style="position: absolute; bottom: 10px; left: 0; width: 100%; display: flex; justify-content: center; gap: 40px; z-index: 20;">
-    <div style="position: relative; display: flex; align-items: center;">
-      <div onclick="selectTool('hoe')" id="hoeTool" style="cursor: pointer; font-size: 20px;">🪒</div>
-      <span id="wheatSeedCount" style="font-size: 11px; margin-left: 3px; background: #fff8; border-radius: 5px; padding: 2px 4px; color: #333; position: absolute; right: -22px; top: 1px; min-width: 12px; text-align: center;">0</span>
-    </div>
+    <div onclick="selectTool('hoe')" id="hoeTool" style="cursor: pointer; font-size: 20px;">🪒</div>
     <div onclick="selectTool('watering-can')" style="cursor: pointer; font-size: 20px;">💧</div>
     <div onclick="selectTool('shovel')" style="cursor: pointer; font-size: 20px;">🛠️</div>
   </div>
@@ -34,40 +31,61 @@
   <div id="building" style="width: 60px; height: 80px; background: gray; border-radius: 6px; position: absolute; bottom: 100px; right: 20px; z-index: 10; box-shadow: 2px 2px 6px rgba(0,0,0,0.4);">
     <div style="width: 20px; height: 20px; background: #444; margin: 10px auto; border-radius: 3px;"></div>
   </div>
+  <!-- Wheat button -->
+  <button id="wheatBtn" style="position: absolute; left: 15px; top: 10px; z-index: 30; padding: 6px 18px; border-radius: 7px; font-size: 15px; background: gold; color: #222; border: 1px solid #aaa; cursor: pointer;">
+    Wheat
+  </button>
   <!-- Movable circle -->
-  <div id="player" style="width: 40px; height: 40px; background: #2196f3; border-radius: 50%; position: absolute; top: 180px; left: 180px; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
+  <div id="player" style="width: 40px; height: 40px; background: #2196f3; border-radius: 50%; position: absolute; top: 80px; left: 180px; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
   <!-- Shop tab (hidden by default) -->
   <div id="shopTab" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 25;">
     <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
   </div>
-  <!-- Wheat window (hidden by default) -->
-  <div id="wheatWindow" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 26;">
-    <strong>Your Wheat:</strong>
-    <span id="wheatCountDisplay" style="font-size: 22px; margin-left: 10px;">0 🌾</span>
-    <span style="float:right;font-size:13px;">(press C to close)</span>
+  <!-- Wheat window -->
+  <div id="wheatWindow" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 170px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 20px 20px 10px 20px; box-sizing: border-box; font-size: 17px; color: #333; display: none; z-index: 26;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <span style="font-size: 22px; font-weight: 600;">Wheat Inventory</span>
+      <button id="closeWheatWindow" style="font-size:17px; background: #eee; border-radius: 6px; padding: 2px 12px; border: 1px solid #aaa; cursor: pointer;">Close</button>
+    </div>
+    <div style="margin-top:18px; font-size:16px;">
+      <div><span style="font-size:21px;">🌾</span> Wheat: <span id="wheatCountDisplay">0</span></div>
+      <div><span style="font-size:16px;">🌰</span> Seeds: <span id="wheatSeedCountMenu">0</span></div>
+      <div style="margin-top:12px;">Total wheat harvested: <span id="totalWheatHarvested">0</span></div>
+    </div>
+    <div style="position: absolute; right: 16px; bottom: 8px; font-size: 13px;">(press C or Close to exit)</div>
   </div>
   <!-- Grass container -->
   <div id="grassContainer"></div>
+  <div id="grassToggleInfo" style="position: absolute; left: 12px; bottom: 110px; font-size: 12px; z-index: 30; background: #fff8; border-radius: 8px; padding: 4px 10px; color: #333;">
+    Press <b>G</b> to toggle grass spawning<br>
+    <span id="grassStatusText" style="color: green;">Grass: ON</span>
+  </div>
   <script>
     const player = document.getElementById('player');
     const building = document.getElementById('building');
     const shopTab = document.getElementById('shopTab');
     const wheatWindow = document.getElementById('wheatWindow');
     const wheatCountDisplay = document.getElementById('wheatCountDisplay');
+    const wheatSeedCountMenu = document.getElementById('wheatSeedCountMenu');
+    const totalWheatHarvestedEl = document.getElementById('totalWheatHarvested');
+    const closeWheatWindowBtn = document.getElementById('closeWheatWindow');
+    const wheatBtn = document.getElementById('wheatBtn');
     const tiles = Array.from(document.querySelectorAll('.tile'));
     const tilesRow = document.getElementById('tilesRow');
     const grassContainer = document.getElementById('grassContainer');
     const wheatSeedCountEl = document.getElementById('wheatSeedCount');
+    const grassStatusText = document.getElementById('grassStatusText');
 
     const containerSize = 400;
     const playerSize = 40;
 
     let posX = 180;
-    let posY = 180;
+    let posY = 80;
     const speed = 3;
     let selectedTool = '';
     const keys = { w: false, a: false, s: false, d: false };
     let wheatWindowVisible = false;
+    let grassEnabled = true;
 
     let wetTiles = Array(tiles.length).fill(false);
     let dryTileTimeouts = Array(tiles.length).fill(null);
@@ -76,10 +94,13 @@
     let grassList = [];
     let wheatSeedCount = 0;
     let wheatCount = 0; // This variable tracks harvested wheat
+    let totalWheatHarvested = 0;
 
     // Wheat/crop state for each tile
     let tileCrops = Array(tiles.length).fill(null);
-    // Each tileCrop holds: {stage: 0-3, planted: true/false, watered: true/false, growTimeout: timeoutId}
+
+    // Remove seed display next to hoe
+    wheatSeedCountEl.style.display = "none";
 
     window.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
@@ -89,8 +110,13 @@
       }
       // Toggle wheat window with "c"
       if (key === "c") {
-        wheatWindowVisible = !wheatWindowVisible;
-        wheatWindow.style.display = wheatWindowVisible ? "block" : "none";
+        toggleWheatWindow();
+      }
+      // Toggle grass with "g"
+      if (key === "g") {
+        grassEnabled = !grassEnabled;
+        grassStatusText.textContent = grassEnabled ? "Grass: ON" : "Grass: OFF";
+        grassStatusText.style.color = grassEnabled ? "green" : "red";
       }
     });
 
@@ -100,12 +126,25 @@
         keys[key] = false;
         e.preventDefault();
       }
-      // Also allow closing wheat window with "c" on keyup (optional)
-      // if (key === "c") {
-      //   wheatWindowVisible = false;
-      //   wheatWindow.style.display = "none";
-      // }
     });
+
+    wheatBtn.addEventListener("click", toggleWheatWindow);
+    closeWheatWindowBtn.addEventListener("click", () => {
+      wheatWindowVisible = false;
+      wheatWindow.style.display = "none";
+    });
+
+    function toggleWheatWindow() {
+      wheatWindowVisible = !wheatWindowVisible;
+      wheatWindow.style.display = wheatWindowVisible ? "block" : "none";
+      updateWheatMenu();
+    }
+
+    function updateWheatMenu() {
+      wheatSeedCountMenu.textContent = wheatSeedCount;
+      wheatCountDisplay.textContent = wheatCount;
+      totalWheatHarvestedEl.textContent = totalWheatHarvested;
+    }
 
     function isColliding(rect1, rect2) {
       return !(
@@ -214,8 +253,7 @@
           tile.appendChild(cropEl);
         }
       });
-      // Update wheat display if window open
-      wheatCountDisplay.textContent = wheatCount + ' 🌾';
+      updateWheatMenu();
     }
 
     // Animation for wheat
@@ -241,6 +279,7 @@
     // GRASS LOGIC
     function spawnGrass() {
       // Limit: only spawn if < 5 grass
+      if (!grassEnabled) return;
       if (grassList.length >= 5) return;
 
       // Get all tile rects
@@ -322,11 +361,13 @@
           // 1/2 chance to get wheat seed
           if (Math.random() < 0.5) {
             wheatSeedCount++;
-            wheatSeedCountEl.textContent = wheatSeedCount;
           }
           removeGrass(grassObj);
         }
       });
+      // Never allow negative wheat seeds
+      if (wheatSeedCount < 0) wheatSeedCount = 0;
+      updateWheatMenu();
     }
 
     // Planting logic: plant seed in brown tile if hoe equipped & seed available & player touches tile
@@ -356,8 +397,8 @@
             watered: wetTiles[i],
             growTimeout: null
           };
-          wheatSeedCount--;
-          wheatSeedCountEl.textContent = wheatSeedCount;
+          wheatSeedCount = Math.max(0, wheatSeedCount - 1);
+          updateWheatMenu();
           renderTiles();
           tryStartCropGrowth(i);
         }
@@ -408,9 +449,15 @@
           // Harvest wheat
           tileCrops[i] = null;
           wheatCount++;
+          totalWheatHarvested++;
+          wheatSeedCount++; // Harvesting wheat gives a seed
+          updateWheatMenu();
           renderTiles();
         }
       });
+      // Never allow negative wheat seeds
+      if (wheatSeedCount < 0) wheatSeedCount = 0;
+      updateWheatMenu();
     }
 
     // Spawn grass every 10 seconds
