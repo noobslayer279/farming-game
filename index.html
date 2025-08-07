@@ -5,187 +5,220 @@
 
 <body>
   <main>
-<script>
-  const player = document.getElementById('player');
-  const building = document.getElementById('building');
-  const shopTab = document.getElementById('shopTab');
-  const tiles = Array.from(document.querySelectorAll('.tile'));
-  const tilesRow = document.getElementById('tilesRow');
+<div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
+  <!-- Row of 10 brown tiles near the top -->
+  <div id="tilesRow" style="display: flex; justify-content: center; gap: 4px; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 380px; z-index: 10;">
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+  </div>
+  <!-- Fence line (tan) at 400px -->
+  <div style="position: absolute; bottom: 80px; left: 0; width: 100%; height: 10px; background: tan; z-index: 15;"></div>
+  <!-- Tool selection area (below shop but above grass) -->
+  <div style="position: absolute; bottom: 10px; left: 0; width: 100%; display: flex; justify-content: center; gap: 40px; z-index: 20;">
+    <div onclick="selectTool('hoe')" style="cursor: pointer; font-size: 20px;">🪒</div>
+    <div onclick="selectTool('watering-can')" style="cursor: pointer; font-size: 20px;">💧</div>
+    <div onclick="selectTool('shovel')" style="cursor: pointer; font-size: 20px;">🛠️</div>
+  </div>
+  <!-- Small building -->
+  <div id="building" style="width: 60px; height: 80px; background: gray; border-radius: 6px; position: absolute; bottom: 100px; right: 20px; z-index: 10; box-shadow: 2px 2px 6px rgba(0,0,0,0.4);">
+    <div style="width: 20px; height: 20px; background: #444; margin: 10px auto; border-radius: 3px;"></div>
+  </div>
+  <!-- Movable circle -->
+  <div id="player" style="width: 40px; height: 40px; background: #2196f3; border-radius: 50%; position: absolute; top: 180px; left: 180px; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
+  <!-- Shop tab (hidden by default) -->
+  <div id="shopTab" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 25;">
+    <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
+  </div>
+  <script>
+    const player = document.getElementById('player');
+    const building = document.getElementById('building');
+    const shopTab = document.getElementById('shopTab');
+    const tiles = Array.from(document.querySelectorAll('.tile'));
+    const tilesRow = document.getElementById('tilesRow');
 
-  const containerSize = 400;
-  const playerSize = 40;
+    const containerSize = 400;
+    const playerSize = 40;
 
-  let posX = 180;
-  let posY = 180;
-  const speed = 3;
-  let selectedTool = '';
-  const keys = { w: false, a: false, s: false, d: false };
+    let posX = 180;
+    let posY = 180;
+    const speed = 3;
+    let selectedTool = '';
+    const keys = { w: false, a: false, s: false, d: false };
 
-  // Track which tiles are wet
-  let wetTiles = Array(tiles.length).fill(false);
+    // Track which tiles are wet
+    let wetTiles = Array(tiles.length).fill(false);
 
-  // Track dry timeouts for each tile so we can reset them
-  let dryTileTimeouts = Array(tiles.length).fill(null);
+    // Track dry timeouts for each tile so we can reset them
+    let dryTileTimeouts = Array(tiles.length).fill(null);
 
-  window.addEventListener('keydown', (e) => {
-    const key = e.key.toLowerCase();
-    if (key in keys) {
-      keys[key] = true;
-      e.preventDefault();
+    window.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (key in keys) {
+        keys[key] = true;
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+      if (key in keys) {
+        keys[key] = false;
+        e.preventDefault();
+      }
+    });
+
+    function isColliding(rect1, rect2) {
+      return !(
+        rect1.right <= rect2.left ||
+        rect1.left >= rect2.right ||
+        rect1.bottom <= rect2.top ||
+        rect1.top >= rect2.bottom
+      );
     }
-  });
 
-  window.addEventListener('keyup', (e) => {
-    const key = e.key.toLowerCase();
-    if (key in keys) {
-      keys[key] = false;
-      e.preventDefault();
+    function canMove(newX, newY) {
+      const newRect = {
+        left: newX,
+        right: newX + playerSize,
+        top: newY,
+        bottom: newY + playerSize
+      };
+
+      // Building collision
+      const buildingRect = building.getBoundingClientRect();
+      const containerRect = player.parentElement.getBoundingClientRect();
+      // Adjust rects to be relative to container
+      const offsetLeft = containerRect.left;
+      const offsetTop = containerRect.top;
+      const buildingRel = {
+        left: building.offsetLeft,
+        right: building.offsetLeft + building.offsetWidth,
+        top: building.offsetTop,
+        bottom: building.offsetTop + building.offsetHeight
+      };
+
+      if (isColliding(newRect, buildingRel)) return false;
+      if (newX < 0 || newY < 0 || newX > containerSize - playerSize || newY > containerSize - playerSize) return false;
+
+      return true;
     }
-  });
 
-  function isColliding(rect1, rect2) {
-    return !(
-      rect1.right <= rect2.left ||
-      rect1.left >= rect2.right ||
-      rect1.bottom <= rect2.top ||
-      rect1.top >= rect2.bottom
-    );
-  }
+    // FIXED: Get tile rect relative to container using getBoundingClientRect
+    function getTileRect(tile) {
+      const containerRect = player.parentElement.getBoundingClientRect();
+      const tileRect = tile.getBoundingClientRect();
+      return {
+        left: tileRect.left - containerRect.left,
+        right: tileRect.right - containerRect.left,
+        top: tileRect.top - containerRect.top,
+        bottom: tileRect.bottom - containerRect.top
+      };
+    }
 
-  function canMove(newX, newY) {
-    const newRect = {
-      left: newX,
-      right: newX + playerSize,
-      top: newY,
-      bottom: newY + playerSize
-    };
+    function wetNearbyTiles() {
+      // Only wet tiles if watering-can is selected
+      if (selectedTool !== 'watering-can') return;
 
-    // Building collision
-    const buildingRect = building.getBoundingClientRect();
-    const containerRect = player.parentElement.getBoundingClientRect();
-    // Adjust rects to be relative to container
-    const offsetLeft = containerRect.left;
-    const offsetTop = containerRect.top;
-    const buildingRel = {
-      left: building.offsetLeft,
-      right: building.offsetLeft + building.offsetWidth,
-      top: building.offsetTop,
-      bottom: building.offsetTop + building.offsetHeight
-    };
+      const playerRect = {
+        left: posX,
+        right: posX + playerSize,
+        top: posY,
+        bottom: posY + playerSize
+      };
 
-    if (isColliding(newRect, buildingRel)) return false;
-    if (newX < 0 || newY < 0 || newX > containerSize - playerSize || newY > containerSize - playerSize) return false;
+      tiles.forEach((tile, i) => {
+        const tileRect = getTileRect(tile);
+        if (isColliding(playerRect, tileRect)) {
+          if (!wetTiles[i]) {
+            wetTiles[i] = true;
 
-    return true;
-  }
-
-  // FIXED: Get tile rect relative to container using getBoundingClientRect
-  function getTileRect(tile) {
-    const containerRect = player.parentElement.getBoundingClientRect();
-    const tileRect = tile.getBoundingClientRect();
-    return {
-      left: tileRect.left - containerRect.left,
-      right: tileRect.right - containerRect.left,
-      top: tileRect.top - containerRect.top,
-      bottom: tileRect.bottom - containerRect.top
-    };
-  }
-
-  function wetNearbyTiles() {
-    // Only wet tiles if watering-can is selected
-    if (selectedTool !== 'watering-can') return;
-
-    const playerRect = {
-      left: posX,
-      right: posX + playerSize,
-      top: posY,
-      bottom: posY + playerSize
-    };
-
-    tiles.forEach((tile, i) => {
-      const tileRect = getTileRect(tile);
-      if (isColliding(playerRect, tileRect)) {
-        if (!wetTiles[i]) {
-          wetTiles[i] = true;
-
-          // Set a timeout to dry the tile after 2 minutes (120000 ms)
-          if (dryTileTimeouts[i]) clearTimeout(dryTileTimeouts[i]);
-          dryTileTimeouts[i] = setTimeout(() => {
-            wetTiles[i] = false;
-            renderTiles();
-          }, 120000); // 2 minutes
+            // Set a timeout to dry the tile after 2 minutes (120000 ms)
+            if (dryTileTimeouts[i]) clearTimeout(dryTileTimeouts[i]);
+            dryTileTimeouts[i] = setTimeout(() => {
+              wetTiles[i] = false;
+              renderTiles();
+            }, 120000); // 2 minutes
+          }
         }
-      }
-    });
-  }
+      });
+    }
 
-  function renderTiles() {
-    tiles.forEach((tile, i) => {
-      if (wetTiles[i]) {
-        tile.style.background = 'rgb(120,65,30)'; // darker brown
+    function renderTiles() {
+      tiles.forEach((tile, i) => {
+        if (wetTiles[i]) {
+          tile.style.background = 'rgb(120,65,30)'; // darker brown
+        } else {
+          tile.style.background = 'sienna'; // dry color
+        }
+      });
+    }
+
+    function movePlayer() {
+      let newX = posX;
+      let newY = posY;
+
+      if (keys.w) newY = Math.max(0, posY - speed);
+      if (keys.a) newX = Math.max(0, posX - speed);
+      if (keys.s) newY = Math.min(containerSize - playerSize, posY + speed);
+      if (keys.d) newX = Math.min(containerSize - playerSize, posX + speed);
+
+      if (canMove(newX, newY)) {
+        posX = newX;
+        posY = newY;
+      }
+
+      player.style.top = posY + 'px';
+      player.style.left = posX + 'px';
+
+      // Shop tab
+      const playerRect = {
+        left: posX,
+        right: posX + playerSize,
+        top: posY,
+        bottom: posY + playerSize
+      };
+      const buildingRect = {
+        left: building.offsetLeft,
+        right: building.offsetLeft + building.offsetWidth,
+        top: building.offsetTop,
+        bottom: building.offsetTop + building.offsetHeight
+      };
+
+      if (isColliding(playerRect, buildingRect)) {
+        shopTab.style.display = 'block';
       } else {
-        tile.style.background = 'sienna'; // dry color
+        shopTab.style.display = 'none';
       }
-    });
-  }
 
-  function movePlayer() {
-    let newX = posX;
-    let newY = posY;
+      // Wet tiles if needed
+      wetNearbyTiles();
+      renderTiles();
 
-    if (keys.w) newY = Math.max(0, posY - speed);
-    if (keys.a) newX = Math.max(0, posX - speed);
-    if (keys.s) newY = Math.min(containerSize - playerSize, posY + speed);
-    if (keys.d) newX = Math.min(containerSize - playerSize, posX + speed);
-
-    if (canMove(newX, newY)) {
-      posX = newX;
-      posY = newY;
+      requestAnimationFrame(movePlayer);
     }
 
-    player.style.top = posY + 'px';
-    player.style.left = posX + 'px';
-
-    // Shop tab
-    const playerRect = {
-      left: posX,
-      right: posX + playerSize,
-      top: posY,
-      bottom: posY + playerSize
-    };
-    const buildingRect = {
-      left: building.offsetLeft,
-      right: building.offsetLeft + building.offsetWidth,
-      top: building.offsetTop,
-      bottom: building.offsetTop + building.offsetHeight
-    };
-
-    if (isColliding(playerRect, buildingRect)) {
-      shopTab.style.display = 'block';
-    } else {
-      shopTab.style.display = 'none';
+    function selectTool(tool) {
+      const toolIcons = {
+        'hoe': '🪒',
+        'watering-can': '💧',
+        'shovel': '🛠️'
+      };
+      selectedTool = tool;
+      player.innerText = toolIcons[tool] || '';
     }
 
-    // Wet tiles if needed
-    wetNearbyTiles();
     renderTiles();
-
-    requestAnimationFrame(movePlayer);
-  }
-
-  function selectTool(tool) {
-    const toolIcons = {
-      'hoe': '🪒',
-      'watering-can': '💧',
-      'shovel': '🛠️'
-    };
-    selectedTool = tool;
-    player.innerText = toolIcons[tool] || '';
-  }
-
-  renderTiles();
-  movePlayer();
-</script>
+    movePlayer();
+  </script>
+</div>
 
 </body>
 
