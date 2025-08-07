@@ -31,10 +31,6 @@
   <div id="building" style="width: 60px; height: 80px; background: gray; border-radius: 6px; position: absolute; bottom: 100px; right: 20px; z-index: 10; box-shadow: 2px 2px 6px rgba(0,0,0,0.4);">
     <div style="width: 20px; height: 20px; background: #444; margin: 10px auto; border-radius: 3px;"></div>
   </div>
-  <!-- Wheat button -->
-  <button id="wheatBtn" style="position: absolute; left: 15px; top: 10px; z-index: 30; padding: 6px 18px; border-radius: 7px; font-size: 15px; background: gold; color: #222; border: 1px solid #aaa; cursor: pointer;">
-    Wheat
-  </button>
   <!-- Movable circle -->
   <div id="player" style="width: 40px; height: 40px; background: #2196f3; border-radius: 50%; position: absolute; top: 180px; left: 180px; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
   <!-- Shop tab (hidden by default) -->
@@ -61,6 +57,7 @@
     <span id="grassStatusText" style="color: green;">Grass: ON</span>
   </div>
   <script>
+    // Game state variables
     const player = document.getElementById('player');
     const building = document.getElementById('building');
     const shopTab = document.getElementById('shopTab');
@@ -69,7 +66,6 @@
     const wheatSeedCountMenu = document.getElementById('wheatSeedCountMenu');
     const totalWheatHarvestedEl = document.getElementById('totalWheatHarvested');
     const closeWheatWindowBtn = document.getElementById('closeWheatWindow');
-    const wheatBtn = document.getElementById('wheatBtn');
     const tiles = Array.from(document.querySelectorAll('.tile'));
     const tilesRow = document.getElementById('tilesRow');
     const grassContainer = document.getElementById('grassContainer');
@@ -83,36 +79,36 @@
     let posY = 180;
     const speed = 3;
     let selectedTool = '';
-    const keys = { w: false, a: false, s: false, d: false };
     let wheatWindowVisible = false;
     let grassEnabled = true;
 
     let wetTiles = Array(tiles.length).fill(false);
     let dryTileTimeouts = Array(tiles.length).fill(null);
 
-    // Grass and wheat seed variables
+    let keys = { w: false, a: false, s: false, d: false };
+
     let grassList = [];
     let wheatSeedCount = 0;
-    let wheatCount = 0; // This variable tracks harvested wheat
+    let wheatCount = 0;
     let totalWheatHarvested = 0;
 
-    // Wheat/crop state for each tile
     let tileCrops = Array(tiles.length).fill(null);
 
     // Remove seed display next to hoe
     wheatSeedCountEl.style.display = "none";
 
+    // Keyboard controls (keydown)
     window.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
-      if (key in keys) {
+      if (['w','a','s','d'].includes(key)) {
         keys[key] = true;
         e.preventDefault();
       }
-      // Toggle wheat window with "c"
       if (key === "c") {
-        toggleWheatWindow();
+        wheatWindowVisible = !wheatWindowVisible;
+        wheatWindow.style.display = wheatWindowVisible ? "block" : "none";
+        updateWheatMenu();
       }
-      // Toggle grass with "g"
       if (key === "g") {
         grassEnabled = !grassEnabled;
         grassStatusText.textContent = grassEnabled ? "Grass: ON" : "Grass: OFF";
@@ -120,25 +116,20 @@
       }
     });
 
+    // Keyboard controls (keyup)
     window.addEventListener('keyup', (e) => {
       const key = e.key.toLowerCase();
-      if (key in keys) {
+      if (['w','a','s','d'].includes(key)) {
         keys[key] = false;
         e.preventDefault();
       }
     });
 
-    wheatBtn.addEventListener("click", toggleWheatWindow);
+    // Wheat menu close button
     closeWheatWindowBtn.addEventListener("click", () => {
       wheatWindowVisible = false;
       wheatWindow.style.display = "none";
     });
-
-    function toggleWheatWindow() {
-      wheatWindowVisible = !wheatWindowVisible;
-      wheatWindow.style.display = wheatWindowVisible ? "block" : "none";
-      updateWheatMenu();
-    }
 
     function updateWheatMenu() {
       wheatSeedCountMenu.textContent = wheatSeedCount;
@@ -163,7 +154,6 @@
         bottom: newY + playerSize
       };
 
-      // Building collision
       const buildingRectAbs = building.getBoundingClientRect();
       const containerRect = player.parentElement.getBoundingClientRect();
       const buildingRel = {
@@ -192,20 +182,17 @@
 
     function wetNearbyTiles() {
       if (selectedTool !== 'watering-can') return;
-
       const playerRect = {
         left: posX,
         right: posX + playerSize,
         top: posY,
         bottom: posY + playerSize
       };
-
       tiles.forEach((tile, i) => {
         const tileRect = getTileRect(tile);
         if (isColliding(playerRect, tileRect)) {
           if (!wetTiles[i]) {
             wetTiles[i] = true;
-            // Mark crop as watered if planted
             if (tileCrops[i] && tileCrops[i].planted) {
               tileCrops[i].watered = true;
               tryStartCropGrowth(i);
@@ -222,11 +209,8 @@
 
     function renderTiles() {
       tiles.forEach((tile, i) => {
-        // Tile background
         tile.style.background = wetTiles[i] ? 'rgb(120,65,30)' : 'sienna';
-        // Crop rendering
         let crop = tileCrops[i];
-        // Remove previous crop visuals
         let cropEl = tile.querySelector('.crop');
         if (cropEl) tile.removeChild(cropEl);
 
@@ -238,15 +222,14 @@
           cropEl.style.top = '50%';
           cropEl.style.transform = 'translate(-50%, -50%)';
           cropEl.style.pointerEvents = 'none';
-
           if (crop.stage === 0) {
-            cropEl.innerHTML = '<span style="font-size:16px; transition:all 0.5s;">🌰</span>'; // seed
+            cropEl.innerHTML = '<span style="font-size:16px; transition:all 0.5s;">🌰</span>';
           } else if (crop.stage === 1) {
-            cropEl.innerHTML = '<span style="font-size:17px; transition:all 0.5s;">🌱</span>'; // sprout
+            cropEl.innerHTML = '<span style="font-size:17px; transition:all 0.5s;">🌱</span>';
           } else if (crop.stage === 2) {
-            cropEl.innerHTML = '<span style="font-size:18px; transition:all 0.5s;">🌾</span>'; // growing wheat
+            cropEl.innerHTML = '<span style="font-size:18px; transition:all 0.5s;">🌾</span>';
           } else if (crop.stage === 3) {
-            cropEl.innerHTML = '<span style="font-size:20px; transition:all 0.5s;">🌾</span>'; // fully grown wheat
+            cropEl.innerHTML = '<span style="font-size:20px; transition:all 0.5s;">🌾</span>';
             cropEl.style.filter = 'drop-shadow(0 0 3px gold)';
             cropEl.style.animation = 'wheat-sway 1s infinite alternate';
           }
@@ -266,33 +249,19 @@
     `;
     document.head.appendChild(style);
 
-    // Helper: get all tile rects (relative to container)
-    function getAllTileRects() {
-      return tiles.map(getTileRect);
-    }
-
-    // Helper: check if a rect collides with any tile
+    function getAllTileRects() { return tiles.map(getTileRect); }
     function collidesWithAnyTile(grassRect, tileRects) {
       return tileRects.some(tileRect => isColliding(grassRect, tileRect));
     }
 
-    // GRASS LOGIC
     function spawnGrass() {
-      // Limit: only spawn if < 5 grass
       if (!grassEnabled) return;
       if (grassList.length >= 5) return;
-
-      // Get all tile rects
       const tileRects = getAllTileRects();
-
-      // Try to spawn at valid position
-      let tries = 0;
-      let grassX, grassY;
-      let ok = false;
+      let tries = 0, grassX, grassY, ok = false;
       while (!ok && tries < 40) {
         grassX = Math.floor(Math.random() * (containerSize - 24));
         grassY = Math.floor(Math.random() * (containerSize - 24));
-        // Don't spawn on shop/building or tiles
         const grassRect = {
           left: grassX,
           right: grassX + 24,
@@ -310,9 +279,7 @@
         ok = !isColliding(grassRect, buildingRel) && !collidesWithAnyTile(grassRect, tileRects);
         tries++;
       }
-      if (!ok) return; // Give up if can't find
-
-      // Create grass element
+      if (!ok) return;
       const grass = document.createElement('div');
       grass.className = 'grass-item';
       grass.style.position = 'absolute';
@@ -338,10 +305,7 @@
     }
 
     function checkGrassPickup() {
-      // Only harvest grass if shovel is equipped
       if (selectedTool !== 'shovel') return;
-
-      // Player rect
       const containerRect = player.parentElement.getBoundingClientRect();
       const playerRectAbs = player.getBoundingClientRect();
       const playerRect = {
@@ -358,23 +322,19 @@
           bottom: grassObj.y + 24
         };
         if (isColliding(playerRect, grassRect)) {
-          // 1/2 chance to get wheat seed
           if (Math.random() < 0.5) {
             wheatSeedCount++;
           }
           removeGrass(grassObj);
         }
       });
-      // Never allow negative wheat seeds
       if (wheatSeedCount < 0) wheatSeedCount = 0;
       updateWheatMenu();
     }
 
-    // Planting logic: plant seed in brown tile if hoe equipped & seed available & player touches tile
     function plantSeedOnTile() {
       if (selectedTool !== 'hoe') return;
       if (wheatSeedCount <= 0) return;
-
       const containerRect = player.parentElement.getBoundingClientRect();
       const playerRectAbs = player.getBoundingClientRect();
       const playerRect = {
@@ -383,14 +343,9 @@
         top: playerRectAbs.top - containerRect.top,
         bottom: playerRectAbs.bottom - containerRect.top
       };
-
       tiles.forEach((tile, i) => {
         const tileRect = getTileRect(tile);
-        if (
-          isColliding(playerRect, tileRect) &&
-          (!tileCrops[i] || !tileCrops[i].planted)
-        ) {
-          // Plant seed
+        if (isColliding(playerRect, tileRect) && (!tileCrops[i] || !tileCrops[i].planted)) {
           tileCrops[i] = {
             stage: 0,
             planted: true,
@@ -405,29 +360,21 @@
       });
     }
 
-    // Try to start crop growth for a tile if possible
     function tryStartCropGrowth(i) {
       const crop = tileCrops[i];
       if (!crop || !crop.planted) return;
-      // Must be watered and not already fully grown
       if (!crop.watered || crop.stage >= 3) return;
-      if (crop.growTimeout) return; // already growing
-
-      // Growth animation: every 10s advance stage. At stage 3, full grown.
+      if (crop.growTimeout) return;
       crop.growTimeout = setTimeout(() => {
         crop.stage++;
         crop.growTimeout = null;
         renderTiles();
-        if (crop.stage < 3 && crop.watered) {
-          tryStartCropGrowth(i); // grow next stage
-        }
-      }, 10000); // 10s per stage, total 30s
+        if (crop.stage < 3 && crop.watered) tryStartCropGrowth(i);
+      }, 10000);
     }
 
-    // Harvest logic: harvest grown wheat with shovel
     function harvestWheat() {
       if (selectedTool !== 'shovel') return;
-
       const containerRect = player.parentElement.getBoundingClientRect();
       const playerRectAbs = player.getBoundingClientRect();
       const playerRect = {
@@ -436,37 +383,27 @@
         top: playerRectAbs.top - containerRect.top,
         bottom: playerRectAbs.bottom - containerRect.top
       };
-
       tiles.forEach((tile, i) => {
         const tileRect = getTileRect(tile);
         const crop = tileCrops[i];
-        if (
-          isColliding(playerRect, tileRect) &&
-          crop &&
-          crop.planted &&
-          crop.stage === 3
-        ) {
-          // Harvest wheat
+        if (isColliding(playerRect, tileRect) && crop && crop.planted && crop.stage === 3) {
           tileCrops[i] = null;
           wheatCount++;
           totalWheatHarvested++;
-          wheatSeedCount++; // Harvesting wheat gives a seed
+          wheatSeedCount++;
           updateWheatMenu();
           renderTiles();
         }
       });
-      // Never allow negative wheat seeds
       if (wheatSeedCount < 0) wheatSeedCount = 0;
       updateWheatMenu();
     }
 
-    // Spawn grass every 10 seconds
     setInterval(spawnGrass, 10000);
 
     function movePlayer() {
       let newX = posX;
       let newY = posY;
-
       if (keys.w) newY = Math.max(0, posY - speed);
       if (keys.a) newX = Math.max(0, posX - speed);
       if (keys.s) newY = Math.min(containerSize - playerSize, posY + speed);
@@ -476,9 +413,8 @@
         posX = newX;
         posY = newY;
       }
-
       player.style.top = posY + 'px';
-      player.style.left = posX + 'px';
+      player.style.left = newX + 'px';
 
       // Shop tab: open when touching the shop
       const containerRect = player.parentElement.getBoundingClientRect();
@@ -489,7 +425,6 @@
         top: playerRectAbs.top - containerRect.top,
         bottom: playerRectAbs.bottom - containerRect.top
       };
-
       const buildingRectAbs = building.getBoundingClientRect();
       const buildingRect = {
         left: buildingRectAbs.left - containerRect.left,
