@@ -5,7 +5,7 @@
 
 <body>
   <main>
-<div style="width: 400px; height: 220px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
+<div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
   <!-- Row of 10 brown tiles near the top -->
   <div id="tilesRow" style="display: flex; justify-content: center; gap: 4px; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 380px; z-index: 10;">
     <div class="tile" data-tile="0" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; position: relative;"></div>
@@ -36,7 +36,7 @@
     Wheat
   </button>
   <!-- Movable circle -->
-  <div id="player" style="width: 40px; height: 40px; background: #2196f3; border-radius: 50%; position: absolute; top: 80px; left: 180px; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
+  <div id="player" style="width: 40px; height: 40px; background: #2196f3; border-radius: 50%; position: absolute; top: 180px; left: 180px; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
   <!-- Shop tab (hidden by default) -->
   <div id="shopTab" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 25;">
     <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
@@ -80,7 +80,7 @@
     const playerSize = 40;
 
     let posX = 180;
-    let posY = 80;
+    let posY = 180;
     const speed = 3;
     let selectedTool = '';
     const keys = { w: false, a: false, s: false, d: false };
