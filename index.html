@@ -5,7 +5,7 @@
 
 <body>
   <main>
-     <div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
+<div style="width: 400px; height: 480px; border: 2px solid #333; margin: 20px auto; position: relative; background: #7CFC00; font-family: Arial, sans-serif;">
 
   <!-- Row of 10 brown tiles near the top -->
   <div id="tilesRow" style="
@@ -20,16 +20,16 @@
     z-index: 10;
   ">
     <!-- 10 Brown Tiles -->
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
-    <div class="tile" style="background: sienna; width: 36px; height: 30px; border-radius: 4px;"></div>
+    <div class="tile" data-index="0" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="1" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="2" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="3" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="4" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="5" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="6" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="7" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="8" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
+    <div class="tile" data-index="9" style="background: sienna; width: 36px; height: 30px; border-radius: 4px; transition: background 0.2s;"></div>
   </div>
 
   <!-- Fence line (tan) at 400px -->
@@ -114,6 +114,8 @@
     const player = document.getElementById('player');
     const building = document.getElementById('building');
     const shopTab = document.getElementById('shopTab');
+    const tiles = Array.from(document.querySelectorAll('.tile'));
+    const tilesRow = document.getElementById('tilesRow');
 
     const containerSize = 400;
     const playerSize = 40;
@@ -122,8 +124,13 @@
     let posY = 180;
     const speed = 3;
     let selectedTool = '';
-
     const keys = { w: false, a: false, s: false, d: false };
+
+    // Track which tiles are wet
+    let wetTiles = Array(tiles.length).fill(false);
+
+    // Track dry timeouts for each tile so we can reset them
+    let dryTileTimeouts = Array(tiles.length).fill(null);
 
     window.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
@@ -158,11 +165,80 @@
         bottom: newY + playerSize
       };
 
+      // Building collision
       const buildingRect = building.getBoundingClientRect();
-      if (isColliding(newRect, buildingRect)) return false;
+      const containerRect = player.parentElement.getBoundingClientRect();
+      // Adjust rects to be relative to container
+      const offsetLeft = containerRect.left;
+      const offsetTop = containerRect.top;
+      const buildingRel = {
+        left: building.offsetLeft,
+        right: building.offsetLeft + building.offsetWidth,
+        top: building.offsetTop,
+        bottom: building.offsetTop + building.offsetHeight
+      };
+
+      if (isColliding(newRect, buildingRel)) return false;
       if (newX < 0 || newY < 0 || newX > containerSize - playerSize || newY > containerSize - playerSize) return false;
 
       return true;
+    }
+
+    // Get absolute position of a tile relative to the container
+    function getTileRect(tile) {
+      const tilesRowRect = tilesRow.getBoundingClientRect();
+      const containerRect = player.parentElement.getBoundingClientRect();
+      // Get offset of tilesRow inside the container
+      const rowOffsetLeft = tilesRow.offsetLeft;
+      const rowOffsetTop = tilesRow.offsetTop;
+      // Get offset of tile inside tilesRow
+      const tileOffsetLeft = tile.offsetLeft;
+      const tileOffsetTop = tile.offsetTop;
+      // Compute absolute position inside container
+      return {
+        left: rowOffsetLeft + tileOffsetLeft,
+        top: rowOffsetTop + tileOffsetTop,
+        right: rowOffsetLeft + tileOffsetLeft + tile.offsetWidth,
+        bottom: rowOffsetTop + tileOffsetTop + tile.offsetHeight
+      };
+    }
+
+    function wetNearbyTiles() {
+      // Only wet tiles if watering-can is selected
+      if (selectedTool !== 'watering-can') return;
+
+      const playerRect = {
+        left: posX,
+        right: posX + playerSize,
+        top: posY,
+        bottom: posY + playerSize
+      };
+
+      tiles.forEach((tile, i) => {
+        const tileRect = getTileRect(tile);
+        if (isColliding(playerRect, tileRect)) {
+          if (!wetTiles[i]) {
+            wetTiles[i] = true;
+
+            // Set a timeout to dry the tile after 2 minutes (120000 ms)
+            if (dryTileTimeouts[i]) clearTimeout(dryTileTimeouts[i]);
+            dryTileTimeouts[i] = setTimeout(() => {
+              wetTiles[i] = false;
+              renderTiles();
+            }, 120000); // 2 minutes
+          }
+        }
+      });
+    }
+
+    function renderTiles() {
+      tiles.forEach((tile, i) => {
+        if (wetTiles[i]) {
+          tile.style.background = 'rgb(120,65,30)'; // darker brown
+        } else {
+          tile.style.background = 'sienna'; // dry color
+        }
+      });
     }
 
     function movePlayer() {
@@ -182,14 +258,29 @@
       player.style.top = posY + 'px';
       player.style.left = posX + 'px';
 
-      const playerRect = player.getBoundingClientRect();
-      const buildingRect = building.getBoundingClientRect();
+      // Shop tab
+      const playerRect = {
+        left: posX,
+        right: posX + playerSize,
+        top: posY,
+        bottom: posY + playerSize
+      };
+      const buildingRect = {
+        left: building.offsetLeft,
+        right: building.offsetLeft + building.offsetWidth,
+        top: building.offsetTop,
+        bottom: building.offsetTop + building.offsetHeight
+      };
 
       if (isColliding(playerRect, buildingRect)) {
         shopTab.style.display = 'block';
       } else {
         shopTab.style.display = 'none';
       }
+
+      // Wet tiles if needed
+      wetNearbyTiles();
+      renderTiles();
 
       requestAnimationFrame(movePlayer);
     }
@@ -204,6 +295,7 @@
       player.innerText = toolIcons[tool] || '';
     }
 
+    renderTiles();
     movePlayer();
   </script>
 </div>
