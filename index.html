@@ -53,10 +53,7 @@
     let selectedTool = '';
     const keys = { w: false, a: false, s: false, d: false };
 
-    // Track which tiles are wet
     let wetTiles = Array(tiles.length).fill(false);
-
-    // Track dry timeouts for each tile so we can reset them
     let dryTileTimeouts = Array(tiles.length).fill(null);
 
     window.addEventListener('keydown', (e) => {
@@ -93,16 +90,13 @@
       };
 
       // Building collision
-      const buildingRect = building.getBoundingClientRect();
+      const buildingRectAbs = building.getBoundingClientRect();
       const containerRect = player.parentElement.getBoundingClientRect();
-      // Adjust rects to be relative to container
-      const offsetLeft = containerRect.left;
-      const offsetTop = containerRect.top;
       const buildingRel = {
-        left: building.offsetLeft,
-        right: building.offsetLeft + building.offsetWidth,
-        top: building.offsetTop,
-        bottom: building.offsetTop + building.offsetHeight
+        left: buildingRectAbs.left - containerRect.left,
+        right: buildingRectAbs.right - containerRect.left,
+        top: buildingRectAbs.top - containerRect.top,
+        bottom: buildingRectAbs.bottom - containerRect.top
       };
 
       if (isColliding(newRect, buildingRel)) return false;
@@ -111,7 +105,6 @@
       return true;
     }
 
-    // FIXED: Get tile rect relative to container using getBoundingClientRect
     function getTileRect(tile) {
       const containerRect = player.parentElement.getBoundingClientRect();
       const tileRect = tile.getBoundingClientRect();
@@ -124,7 +117,6 @@
     }
 
     function wetNearbyTiles() {
-      // Only wet tiles if watering-can is selected
       if (selectedTool !== 'watering-can') return;
 
       const playerRect = {
@@ -139,13 +131,11 @@
         if (isColliding(playerRect, tileRect)) {
           if (!wetTiles[i]) {
             wetTiles[i] = true;
-
-            // Set a timeout to dry the tile after 2 minutes (120000 ms)
             if (dryTileTimeouts[i]) clearTimeout(dryTileTimeouts[i]);
             dryTileTimeouts[i] = setTimeout(() => {
               wetTiles[i] = false;
               renderTiles();
-            }, 120000); // 2 minutes
+            }, 120000);
           }
         }
       });
@@ -153,11 +143,7 @@
 
     function renderTiles() {
       tiles.forEach((tile, i) => {
-        if (wetTiles[i]) {
-          tile.style.background = 'rgb(120,65,30)'; // darker brown
-        } else {
-          tile.style.background = 'sienna'; // dry color
-        }
+        tile.style.background = wetTiles[i] ? 'rgb(120,65,30)' : 'sienna';
       });
     }
 
@@ -178,18 +164,22 @@
       player.style.top = posY + 'px';
       player.style.left = posX + 'px';
 
-      // Shop tab
+      // Shop tab: open when touching the shop
+      const containerRect = player.parentElement.getBoundingClientRect();
+      const playerRectAbs = player.getBoundingClientRect();
       const playerRect = {
-        left: posX,
-        right: posX + playerSize,
-        top: posY,
-        bottom: posY + playerSize
+        left: playerRectAbs.left - containerRect.left,
+        right: playerRectAbs.right - containerRect.left,
+        top: playerRectAbs.top - containerRect.top,
+        bottom: playerRectAbs.bottom - containerRect.top
       };
+
+      const buildingRectAbs = building.getBoundingClientRect();
       const buildingRect = {
-        left: building.offsetLeft,
-        right: building.offsetLeft + building.offsetWidth,
-        top: building.offsetTop,
-        bottom: building.offsetTop + building.offsetHeight
+        left: buildingRectAbs.left - containerRect.left,
+        right: buildingRectAbs.right - containerRect.left,
+        top: buildingRectAbs.top - containerRect.top,
+        bottom: buildingRectAbs.bottom - containerRect.top
       };
 
       if (isColliding(playerRect, buildingRect)) {
@@ -198,7 +188,6 @@
         shopTab.style.display = 'none';
       }
 
-      // Wet tiles if needed
       wetNearbyTiles();
       renderTiles();
 
