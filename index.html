@@ -33,9 +33,24 @@
   </div>
   <!-- Movable circle -->
   <div id="player" style="width: 40px; height: 40px; background: #2196f3; border-radius: 50%; position: absolute; top: 180px; left: 180px; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
-  <!-- Shop tab (hidden by default) -->
-  <div id="shopTab" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: #fff; border-top: 2px solid #333; box-shadow: 0 -5px 10px rgba(0,0,0,0.2); padding: 15px; box-sizing: border-box; font-size: 16px; color: #333; display: none; z-index: 25;">
-    <strong>Shop:</strong> Welcome! You can buy cool upgrades here.
+  <!-- Shop tab FULL SCREEN -->
+  <div id="shopTab" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; border: none; box-shadow: none; padding: 0; font-size: 16px; color: #333; display: none; z-index: 100;">
+    <!-- Coin counter in shop only (top right) -->
+    <div id="coinsDisplay" style="position: absolute; top: 10px; right: 16px; font-size: 22px; font-weight: bold; background: #fffbe7; border-radius: 6px; padding: 6px 16px; border: 1px solid #e5c76e;">
+      Coins: <span id="coinCount">0</span>
+    </div>
+    <!-- Shop content centered -->
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;text-align:center;">
+      <strong style="font-size:22px;">Shop</strong>
+      <div style="margin:16px 0 24px 0;">Sell your items here!</div>
+      <button id="sellSeedsBtn" style="padding:12px 32px; border-radius:10px; font-size:18px; background:#ffe7a1; border:1px solid #aaa; cursor:pointer;">
+        Sell Seeds (+0.5 coins)
+      </button>
+      <button id="sellWheatBtn" style="margin-left:28px; padding:12px 32px; border-radius:10px; font-size:18px; background:#ffd700; border:1px solid #aaa; cursor:pointer;">
+        Sell Wheat (+1 coin)
+      </button>
+      <div style="margin-top:30px;font-size:15px;color:#555;">Leave the shop by moving away from the building.</div>
+    </div>
   </div>
   <!-- Wheat menu window (press C to open) -->
   <div id="wheatMenuWindow" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 340px; height: 210px; background: #fff; border: 2px solid #c2a300; border-radius: 18px; box-shadow: 0 0 30px #0002; padding: 28px 34px 15px 34px; box-sizing: border-box; font-size: 17px; color: #333; display: none; z-index: 40;">
@@ -58,6 +73,9 @@
   </div>
   <div id="grassContainer"></div>
   <script>
+    // ---- SHOP STATE ----
+    let coins = 0;
+
     // Game state variables
     const player = document.getElementById('player');
     const building = document.getElementById('building');
@@ -71,10 +89,6 @@
     const wheatBtn = document.getElementById('wheatBtn');
     const tiles = Array.from(document.querySelectorAll('.tile'));
     const grassContainer = document.getElementById('grassContainer');
-    const wheatSeedCountEl = document.getElementById('wheatSeedCount');
-
-    // Remove seed display next to hoe if present
-    wheatSeedCountEl && (wheatSeedCountEl.style.display = "none");
 
     const containerSize = 400;
     const playerSize = 40;
@@ -465,6 +479,33 @@
 
     renderTiles();
     movePlayer();
+
+    // ---- SHOP BUTTONS LOGIC ----
+    function updateCoinsDisplay() {
+      document.getElementById('coinCount').innerText = coins.toFixed(1);
+    }
+    document.getElementById('sellSeedsBtn').onclick = function() {
+      if (wheatSeedCount > 0) {
+        coins += 0.5;
+        wheatSeedCount--;
+        updateCoinsDisplay();
+        updateWheatMenu();
+      } else {
+        alert("You have no seeds to sell!");
+      }
+    };
+    document.getElementById('sellWheatBtn').onclick = function() {
+      if (wheatCount > 0) {
+        coins += 1;
+        wheatCount--;
+        updateCoinsDisplay();
+        updateWheatMenu();
+      } else {
+        alert("You have no wheat to sell!");
+      }
+    };
+    // Ensure coin counter updates at start
+    updateCoinsDisplay();
   </script>
 </div>
 
